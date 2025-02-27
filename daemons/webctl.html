@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DaemonicFaery Web</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --shade10: #0d0d0d;
+            --shade20: #101010;
+            --shade30: #151515;
+            --shade40: #303030;
+            --shade50: #505050;
+            --shade60: #b0b0b0;
+            --color100: #8a38f7;
+        }
+
+        ::-webkit-scrollbar{
+            background-color: inherit;
+            padding: 50px;
+            width: 12px;
+            height: 12px;
+        }::-webkit-scrollbar-corner{
+            background-color: inherit;
+        }::-webkit-scrollbar-thumb{
+            background-color: var(--shade40);
+            border-radius: 50px;
+            border: 4px solid #00000000;
+            background-clip: padding-box;
+            margin: 50px;
+        }
+
+        body{
+            background-color: var(--shade20);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            font-family: "Montserrat", Arial, Helvetica, sans-serif;
+        }
+        #main{
+            background: var(--shade30);
+            color: var(--shade50);
+            min-height: 100vh;
+            max-width: 800px;
+            border-right: 2px solid var(--shade40);
+            border-left: 2px solid var(--shade40);
+        }
+        #top{padding: 25px 20px 20px 20px;}
+        #faeryRow1{
+            color: var(--color100);
+            font-size: 42px;
+            font-weight: 300;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }#hostname{font-weight: 700;}
+        #refreshButton{
+            background-color: var(--shade20);
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            border: solid 1px var(--shade40);
+            margin-left: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: 250ms;
+        }#refreshButton:hover{
+            opacity: 0.7;
+            transition: 200ms;
+        }#refreshButton svg{
+            fill: var(--color100);
+            height: 30px;
+            width: 30px;
+            position: relative;
+        }
+        #faeryRow2{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            margin-right: 80px;
+            font-size: 25px;
+        }#version{font-weight: 500;}#daemons{font-weight: 500;}#uptime{font-weight: 500;}
+        #output{
+            background-color: var(--shade10);
+            color: var(--shade60);
+            min-height: 350px;
+            max-height: 350px;
+            width: inherit;
+            padding: 10px;
+            overflow: auto;
+        }
+        #webSignalContainer{padding: 20px;}
+        .webSignalItem{margin-bottom: 45px;}
+        .titleRow{
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            font-size: 25px;
+            font-weight: 300;
+            margin-bottom: 15px;
+        }.sendButton{
+            background-color: var(--shade20);
+            width: 40px;
+            height: 40px;
+            border-radius: 25px;
+            margin-right: 15px;
+            border: solid 1px var(--shade40);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: 250ms;
+        }.sendButton:hover{
+            opacity: 0.7;
+            transition: 200ms;
+        }.sendButton svg{
+            fill: var(--color100);
+            height: 30px;
+            width: 30px;
+            position: relative;
+            right: -2px;
+        }
+        .title{color: var(--color100);font-weight: 700;margin-right: 15px;}
+        .willReturnIcon{
+            margin-left: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }.willReturnIcon svg{
+            fill: var(--color100);
+            height: 30px;
+            width: 30px;
+            position: relative;
+        }
+        .webSignalDescriptionRow{
+            padding-left: 55px; /* .sendButton.width + .sendButton.margin-right */
+            font-size: 20px;
+            position: relative;
+            top: -15px;
+        }
+        .webSignalInputRow{display: flex;flex-wrap: wrap;}
+        .webSignalInputRow input{
+            background-color: var(--shade20);
+            color: var(--shade60);
+            border: solid 2px var(--shade40); /* var(--color100) */
+            border-radius: 10px;
+            height: 35px;
+            max-width: 228px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            padding-left: 8px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .webSignalInputRow input:focus{outline: none;}
+        .webSignalInputRow input::placeholder{color: var(--shade50);font-weight: 700;}
+        .webSignalInputRow .requiredInput{
+            border: solid 2px var(--color100);
+        }
+        .webSignalItem hr{
+            border: var(--shade40) 1px dashed;
+        }
+    </style>
+</head>
+<body>
+    <div id="main">
+        <div id="top">
+            <div id="faeryRow1">
+                <div>DaemonicFaery: <span id="hostname"></span></div>
+                <div id="refreshButton" onclick="javascript:location.reload()">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>
+                </div>
+            </div>
+            <div id="faeryRow2">
+                <div>Ver: <span id="version"></span></div>
+                <div>Daemons: <span id="daemons"></span></div>
+                <div>Uptime: <span id="uptime"></span></div>
+            </div>
+        </div>
+        <div id="output"></div>
+        <div id="webSignalContainer">
+
+
+            <!-- <div class="webSignalItem">
+                <div class="titleRow">
+                    <div class="sendButton">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>
+                    </div>
+                    <div class="title">webSignal</div>
+                    <div class="daemonName">DaemonName</div>
+                    <div class="willReturnIcon">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M760-200v-160q0-50-35-85t-85-35H273l144 144-57 56-240-240 240-240 57 56-144 144h367q83 0 141.5 58.5T840-360v160h-80Z"/></svg>
+                    </div>
+                </div>
+                <div class="webSignalDescriptionRow">description string</div>
+                <div class="webSignalInputRow">
+                    <input class="requiredInput" type="text" id="" placeholder="yeet">
+                    <input class="requiredInput" type="text" id="" placeholder="">
+                    <input type="text" id="" placeholder="">
+                    <input type="text" id="" placeholder="">
+                    <input type="text" id="" placeholder="">
+                </div>
+                <hr>
+            </div> -->
+
+
+        </div>
+    </div>
+    <script>
+        // Variables
+        let injectedData={"faeryStatus":{"version":"2025.2.0","hostname":"RyServer","startTime":1740112883414,"maxLogSize":100,"daemons":[{"daemonName":"TOTPAuth","isActive":true},{"daemonName":"RestAPI","isActive":true},{"daemonName":"WebCTL","isActive":true},{"daemonName":"SystemCTL","isActive":true}]},"webSignals":{"poweroff":{"daemon":"SystemCTL","respondWithSignal":"poweroffCalled","willRespond":false,"description":"","mandatoryParams":["totp"],"optionalParams":["OSPass"]},"restart":{"daemon":"SystemCTL","respondWithSignal":"restartCalled","willRespond":false,"description":"","mandatoryParams":["totp"],"optionalParams":["OSPass"]},"sleep":{"daemon":"SystemCTL","respondWithSignal":"sleepCalled","willRespond":false,"description":"","mandatoryParams":["totp"],"optionalParams":["OSPass"]},"runSh":{"daemon":"SystemCTL","respondWithSignal":"runShCalled","willRespond":true,"description":"","mandatoryParams":["totp","sh"],"optionalParams":["OSPass"]},"getLogs":{"daemon":"SystemCTL","respondWithSignal":"getLogsCalled","willRespond":true,"description":"","mandatoryParams":["totp"],"optionalParams":[]},"getFaeryStatus":{"daemon":"SystemCTL","respondWithSignal":"getFaeryStatusCalled","willRespond":true,"description":"","mandatoryParams":[],"optionalParams":[]},"getFaeryDaemon":{"daemon":"SystemCTL","respondWithSignal":"getDaemonStatusCalled","willRespond":true,"description":"","mandatoryParams":["daemonName"],"optionalParams":[]},"startDaemon":{"daemon":"SystemCTL","respondWithSignal":"startDaemonCalled","willRespond":false,"description":"","mandatoryParams":["totp","daemonName"],"optionalParams":[]},"stopDaemon":{"daemon":"SystemCTL","respondWithSignal":"stopDaemonCalled","willRespond":false,"description":"","mandatoryParams":["totp","daemonName"],"optionalParams":[]},"":{"daemon":"WebCTL","respondWithSignal":"pageRequested","willRespond":true,"description":"","mandatoryParams":[],"optionalParams":[]}}};
+        
+        // Functions
+        function ce(tag, opts={}, children=[]){
+            let e = document.createElement(tag);
+            Object.assign(e, opts);
+            for (index in children){e.append(children[index]);}
+            return e;
+        }
+        function escapeHTML(str){return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/'/g, "&#039;").replace(/>/g, "&gt;");}
+
+        function makeReq(webSignalName){
+            if (webSignalName in injectedData.webSignals){
+                let mandatoryParamMissing = false;
+                let urlParamsObj = {};
+                for (index in injectedData.webSignals[webSignalName].mandatoryParams){
+                    let returnValue = document.getElementById(`${webSignalName}_${injectedData.webSignals[webSignalName].mandatoryParams[index]}`).value;
+                    if (returnValue){urlParamsObj[injectedData.webSignals[webSignalName].mandatoryParams[index]]=returnValue;}
+                    else{mandatoryParamMissing=true}
+                }
+                for (index in injectedData.webSignals[webSignalName].optionalParams){
+                    let returnValue = document.getElementById(`${webSignalName}_${injectedData.webSignals[webSignalName].optionalParams[index]}`).value;
+                    if (returnValue){urlParamsObj[injectedData.webSignals[webSignalName].optionalParams[index]]=returnValue;}
+                }
+                if (mandatoryParamMissing==false){
+                    fetch(`${location.protocol}//${location.host}/${webSignalName}?${new URLSearchParams(urlParamsObj).toString()}`).then((res)=>{
+                        if (res.status==200){
+                            res.text().then((resText)=>{document.getElementById("output").innerText=resText;});
+                        }else{
+                            document.getElementById("output").innerText = "Error sending webSignal "+webSignalName;
+                        }
+                    });
+                }
+            }
+        }
+
+        // Start Point
+        document.getElementById("hostname").innerText = injectedData.faeryStatus.hostname;
+        document.getElementById("version").innerText = injectedData.faeryStatus.version;
+        document.getElementById("daemons").innerText = injectedData.faeryStatus.daemons.length;
+        document.getElementById("uptime").innerText = `${Math.floor((Date.now()-injectedData.faeryStatus.startTime)/(1000*60*60))}h`;
+        for (item in injectedData.webSignals){
+            let params = [];
+            let inputElems = [];
+            for (item2 in injectedData.webSignals[item].mandatoryParams){params.push([injectedData.webSignals[item].mandatoryParams[item2], true])}
+            for (item2 in injectedData.webSignals[item].optionalParams){params.push([injectedData.webSignals[item].optionalParams[item2], false])}
+            for (index in params){
+                inputElems.push(ce("input", {type: "text", id: escapeHTML(`${item}_${params[index][0]}`), className: params[index][1]?"requiredInput":"", placeholder: escapeHTML(params[index][0])}));
+            }
+
+            let sendButton = ce("div", {className: "sendButton", innerHTML: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>`});
+            sendButton.webSignalName=item;
+            sendButton.onclick = function(){makeReq(this.webSignalName)};
+            document.getElementById("webSignalContainer").append(
+                ce("div", {className: "webSignalItem"}, [
+                    ce("div", {className: "titleRow"}, [
+                        sendButton,
+                        ce("div", {className: "title"}, [escapeHTML(item)]),
+                        ce("div", {className: "daemonName"}, [escapeHTML(injectedData.webSignals[item].daemon)]),
+                        injectedData.webSignals[item].willRespond?ce("div",{className:"willReturnIcon", innerHTML: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M760-200v-160q0-50-35-85t-85-35H273l144 144-57 56-240-240 240-240 57 56-144 144h367q83 0 141.5 58.5T840-360v160h-80Z"/></svg>`}):ce("span",{className:""}),
+                    ]),
+                    ce("div", {className: "webSignalDescriptionRow"}, [escapeHTML(injectedData.webSignals[item].description)]),
+                    ce("div", {className: "webSignalInputRow"}, inputElems),
+                    ce("hr")
+                ])
+            );
+        }
+    </script>
+</body>
+</html>

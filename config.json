@@ -1,0 +1,29 @@
+{
+    "daemonDefinitions": [
+        {
+            "fileLocation": "./daemons/totp.ts",
+            "daemonName": "TOTPAuth",
+            "configs": {
+                "totpSecret": "NaishoNaishoNaishoNaishoNaishoNaishoNaishoNaisho"
+            }
+        },
+        {
+            "fileLocation": "./daemons/restAPI.ts",
+            "daemonName": "RestAPI",
+            "configs": {
+                "maxWebResponseTimeoutMS": 5000
+            }
+        },
+        {
+            "fileLocation": "./daemons/restAPI.ts",
+            "daemonName": "WebCTL",
+            "configs": {
+                "pageLocation": "./daemons/webctl.html"
+            }
+        },
+        {
+            "fileLocation": "./daemons/systemctl.ts",
+            "daemonName": "SystemCTL"
+        }
+    ]
+}
