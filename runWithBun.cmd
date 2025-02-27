@@ -1,1 +1,0 @@
-bun run daemonicFaery.ts config.json
