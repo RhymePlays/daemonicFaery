@@ -1,5 +1,6 @@
 import { DaemonicDaemon } from "../daemonicFaery.ts";
-import { type } from "os";
+import { type } from "node:os";
+import { exec } from "node:child_process";
 
 export class SystemCTL extends DaemonicDaemon {
     /*--------------------------------*\
@@ -10,9 +11,12 @@ export class SystemCTL extends DaemonicDaemon {
     Daemon Usage:
     
     \*--------------------------------*/
-    async runSh(command: String){
-        try{return await Bun.$`${command}`.text();}
-        catch(e){return "error";}
+    async runSh(command: string){
+        return new Promise((resolve)=>{
+            exec(command, (error, stdout, stderr)=>{
+                resolve(stdout || stderr || "error");
+            });
+        })
     }
 
     onLoad(){this.variables["OS"]=type();}

@@ -21,7 +21,6 @@ export class TOTPAuth extends DaemonicDaemon {
     }
 
     receiver(from:string, signal:string, data:any, ID:string,){
-        console.log(this);
         if(signal=="getSecretString"){
             this.pushLog(`Secret String sent to '${from}'`);
             this.sender(from, "TOTPSecretString", this.getSecretString(), ID);

@@ -1,3 +1,6 @@
+import { readFile, existsSync } from "node:fs"
+import { randomUUID } from "node:crypto"
+
 interface daemonDefinitionInterface{fileLocation:string;daemonName:string;configs?:object;}
 interface daemonicFaeryConfigInterface{hostname?:string,daemonDefinitions?:daemonDefinitionInterface[],maxLogSize?:number}
 export class DaemonicFaery{
@@ -18,25 +21,27 @@ export class DaemonicFaery{
 
         /*--Loading Config [Step-1]--*/
         if (typeof(config)=="string"){
-            let fileObj = Bun.file(config);
-            fileObj.exists().then((fileExists:boolean)=>{
-                let returnValue:daemonicFaeryConfigInterface={};
-                if(fileExists){
-                    fileObj.text().then((value)=>{
+            let returnValue:daemonicFaeryConfigInterface={};
+            if (existsSync(config)){
+                readFile(config, "utf-8", (error, data)=>{
+                    if (!error && data){
                         try{
-                            returnValue=JSON.parse(value);
+                            returnValue=JSON.parse(data);
                             this.pushLog("Config: Read from file.");
                             this.loadConfig(returnValue);
                         }catch(e){
                             this.pushLog("Config: Couldn't decode file. Probably not in JSON.", false);
                             this.loadConfig(returnValue);
                         }
-                    });
-                }else{
-                    this.pushLog("Config: Couldn't find file.", false);
-                    this.loadConfig(returnValue);
-                }
-            });
+                    }else{
+                        this.pushLog("Config: Couldn't reading file.", false);
+                        this.loadConfig(returnValue);
+                    }
+                });
+            }else{
+                this.pushLog("Config: Couldn't find file.", false);
+                this.loadConfig(returnValue);
+            }
         }else{
             this.pushLog("Config: Read from Object.");
             this.loadConfig(config);
@@ -64,7 +69,7 @@ export class DaemonicFaery{
         for (let daemonName in this.daemons){this.startDaemon(daemonName);}
     }
     private async loadDaemon(daemonDefinition:daemonDefinitionInterface){ // Don't call.
-        if(await Bun.file(daemonDefinition.fileLocation).exists()){
+        if(existsSync(daemonDefinition.fileLocation)){
             let imports = await import(daemonDefinition.fileLocation);
             if(daemonDefinition.daemonName in imports){
                 this.daemons[daemonDefinition.daemonName] = new imports[daemonDefinition.daemonName](this, daemonDefinition.configs);
@@ -142,7 +147,7 @@ export class DaemonicDaemon{
     public onLoad(){} // Don't call. Safe to change definition.
     protected pushLog(log:string, successStatus:boolean=true){this.daemonicFaeryInstance.pushLog(log, successStatus, this.constructor.name);} // Safe to call. Don't change definition.
     protected sender(to:string, signal:string, data:any, ID:string|undefined=undefined, signalResponseCallback?:Function){ // Safe to call. Don't change definition.
-        let correctID=ID||Bun.randomUUIDv7();
+        let correctID=ID||randomUUID();
         if (typeof(signalResponseCallback)=="function"){
             this.signalResponseCallbackFunctions[correctID]=signalResponseCallback; //ToDo: Make this Async.
         }
@@ -162,4 +167,4 @@ export class DaemonicDaemon{
 }
 
 // Start Point
-let daemonicFaeryInstance = new DaemonicFaery(Bun.argv[2] || "~/.config/daemonicFaery/config.json");
+let daemonicFaeryInstance = new DaemonicFaery(process.argv[2] || "~/.config/daemonicFaery/config.json");

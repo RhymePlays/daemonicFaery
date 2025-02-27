@@ -1,0 +1,1 @@
+deno --allow-read --allow-net --allow-run --allow-env daemonicFaery.ts config.json

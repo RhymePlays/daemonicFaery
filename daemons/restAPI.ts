@@ -1,4 +1,6 @@
 import { DaemonicDaemon } from "../daemonicFaery.ts";
+import { readFile } from "node:fs";
+import { createServer } from "node:http";
 
 export class RestAPI extends DaemonicDaemon {
     /*--------------------------------*\
@@ -31,49 +33,55 @@ export class RestAPI extends DaemonicDaemon {
     \*--------------------------------*/
     start(){
         this.variables["listenJob"]={};
-        this.variables["httpServer"]=Bun.serve({
-            port: this.config.port||80,
-            fetch: async (req)=>{
-                let urlObj=new URL(req.url);
-                let webSignal=urlObj.pathname.split("/")[1];
-                if (webSignal in this.variables.listenJob){
-                    let listenItem = this.variables.listenJob[webSignal];
-                    
-                    let allMandatoryParamsPresent:boolean=true;
-                    for (let index in listenItem.mandatoryParams){
-                        if (urlObj.searchParams.get(listenItem.mandatoryParams[index])==null){allMandatoryParamsPresent=false;}
-                    }
+        this.variables["httpServer"]=createServer(async (req, res)=>{ // ToDo: Redo this bit
+            let urlObj=new URL(`http://localhost:${this.config.port||80}${req.url}`);
+            let webSignal=urlObj.pathname.split("/")[1];
+            
+            if (webSignal in this.variables.listenJob){
+                let listenItem = this.variables.listenJob[webSignal];
 
-                    if (allMandatoryParamsPresent){
-                        this.pushLog(`webSignal '${webSignal}' called`);
-                        this.sender(listenItem.daemon, listenItem.respondWithSignal, urlObj.searchParams);
-                        if (listenItem.willRespond){
-                            let webResponseObj:{webResponse:string,isHTML:boolean} = await new Promise((resolve)=>{this.waitForWebResponse(webSignal, resolve);})
-                            return new Response(
-                                webResponseObj.webResponse,
-                                {headers:{"content-type":webResponseObj.isHTML?"text/html;charset=utf-8":"text/plain;charset=utf-8"}}
-                            );
-                        }else{
-                            return new Response(
-                                this.config.defaultResponse||"200",
-                                {headers:{"content-type":this.config.defaultResponse?"text/html;charset=utf-8":"text/plain;charset=utf-8"}}
-                            );
-                        }
+                let allMandatoryParamsPresent:boolean=true;
+                for (let index in listenItem.mandatoryParams){
+                    if (urlObj.searchParams.get(listenItem.mandatoryParams[index])==null){allMandatoryParamsPresent=false;}
+                }
+
+                if (allMandatoryParamsPresent){
+                    this.pushLog(`webSignal '${webSignal}' called`);
+                    this.sender(listenItem.daemon, listenItem.respondWithSignal, urlObj.searchParams);
+                    if (listenItem.willRespond){
+                        let webResponseObj:{webResponse:string,isHTML:boolean} = await new Promise((resolve)=>{this.waitForWebResponse(webSignal, resolve);});
+                        this.httpResponse(
+                            res,
+                            webResponseObj.webResponse,
+                            200,
+                            {"content-type":webResponseObj.isHTML?"text/html;charset=utf-8":"text/plain;charset=utf-8"}
+                        );
                     }else{
-                        return new Response(
-                            this.config.insufficientParametersResponse||"400",
-                            {headers:{"content-type":this.config.insufficientParametersResponse?"text/html;charset=utf-8":"text/plain;charset=utf-8"}}
+                        this.httpResponse(
+                            res,
+                            this.config.defaultResponse||"200",
+                            200,
+                            {"content-type":this.config.defaultResponse?"text/html;charset=utf-8":"text/plain;charset=utf-8"}
                         );
                     }
                 }else{
-                    return new Response(
-                        this.config.notFoundResponse||"404",
-                        {headers:{"content-type":this.config.notFoundResponse?"text/html;charset=utf-8":"text/plain;charset=utf-8"}}
-
+                    this.httpResponse(
+                        res,
+                        this.config.insufficientParametersResponse||"400",
+                        this.config.insufficientParametersResponse?200:400,
+                        {"content-type":this.config.insufficientParametersResponse?"text/html;charset=utf-8":"text/plain;charset=utf-8"}
                     );
                 }
+
+            }else{
+                this.httpResponse(
+                    res,
+                    this.config.notFoundResponse||"404",
+                    this.config.notFoundResponse?200:404,
+                    {"content-type":this.config.notFoundResponse?"text/html;charset=utf-8":"text/plain;charset=utf-8"}
+                );
             }
-        });
+        }).listen(this.config.port||80);
     }
     stop(){this.variables["httpServer"].stop();}
 
@@ -93,6 +101,11 @@ export class RestAPI extends DaemonicDaemon {
                 resolve({webResponse: this.config.timeoutResponse||"408", isHTML: this.config.timeoutResponse?true:false});
             }
         }, 200);
+    }
+    httpResponse(res:any, body:string, statusCode?:number, header?:any){
+        res.writeHead(statusCode?statusCode:200, header?header:{"content-type": "text/plain;charset=utf-8"});
+        res.write(body);
+        res.end();
     }
 
     receiver(from:string, signal:string, data:any, ID:string){
@@ -129,9 +142,9 @@ export class WebCTL extends DaemonicDaemon {
     
     \*--------------------------------*/
     async start(){
-        let pageFile = Bun.file(this.config.pageLocation);
-        this.variables.pageHTML = await pageFile.exists()?await pageFile.text():"[INJECTJSON]";
-        
+        this.variables.pageHTML = "[INJECTJSON]";
+        readFile(this.config.pageLocation, "utf-8", (error, data)=>{if(!error && data){this.variables.pageHTML = data;}});
+
         this.sender("RestAPI", "addListener", {
             webSignal: "",
             respondWithSignal: "pageRequested",
