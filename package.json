@@ -9,6 +9,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "chalk": "^5.4.1",
     "node-html-parser": "^7.0.1",
     "otpauth": "^9.3.6"
   }
