@@ -24,6 +24,10 @@
         {
             "fileLocation": "./daemons/systemctl.ts",
             "daemonName": "SystemCTL"
+        },
+        {
+            "fileLocation": "./daemons/stockCheckST.ts",
+            "daemonName": "StockCheckST"
         }
     ]
 }
