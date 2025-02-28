@@ -1,5 +1,6 @@
-import { readFile, existsSync } from "node:fs"
-import { randomUUID } from "node:crypto"
+import { readFile, existsSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+import chalk from "chalk";
 
 interface daemonDefinitionInterface{fileLocation:string;daemonName:string;configs?:object;}
 interface daemonicFaeryConfigInterface{hostname?:string,daemonDefinitions?:daemonDefinitionInterface[],maxLogSize?:number}
@@ -54,7 +55,13 @@ export class DaemonicFaery{
     public pushLog(log:string, successStatus:boolean=true, source:string="DaemonicFaery"){ // Don't call this directly. Rather call DaemonicDaemon.pushLog();
         while(this.log.length>=this.maxLogSize){this.log.shift();}
         this.log.push([successStatus, Date.now(), source, log]);
-        console.log(this.log[this.log.length-1]);
+
+        let logItem = this.log[this.log.length-1];
+        if (logItem[2]=="DaemonicFaery"){
+            console.log(`${chalk.redBright("")}${chalk.bgRedBright.bold(logItem[2])}${chalk.redBright("")} ${logItem[0]?chalk.redBright("  ")+chalk.white(logItem[3]):chalk.redBright("  ")+chalk.redBright(logItem[3])}\n`);
+        }else{
+            console.log(`${chalk.cyan("")}${chalk.bgCyan.bold(logItem[2])}${chalk.cyan("")} ${logItem[0]?chalk.cyan("  ")+chalk.gray(logItem[3]):chalk.cyan("  ")+chalk.redBright(logItem[3])}\n`);
+        }
     }
 
     private async loadConfig(configObj:daemonicFaeryConfigInterface){ // Don't call.
