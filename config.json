@@ -18,12 +18,16 @@
             "fileLocation": "./daemons/restAPI.ts",
             "daemonName": "WebCTL",
             "configs": {
-                "pageLocation": "./daemons/webctl.html"
+                "pageLocation": "./daemonDependencies/webctl.html"
             }
         },
         {
             "fileLocation": "./daemons/systemctl.ts",
             "daemonName": "SystemCTL"
+        },
+        {
+            "fileLocation": "./daemons/stockCheckST.ts",
+            "daemonName": "StockCheckST"
         }
     ]
 }
