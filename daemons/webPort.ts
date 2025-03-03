@@ -2,7 +2,8 @@ import { DaemonicDaemon } from "../daemonicFaery.ts";
 import { readFile } from "node:fs";
 import { createServer } from "node:http";
 
-export class RestAPI extends DaemonicDaemon {
+export class WebPort extends DaemonicDaemon{
+    // ToDo: use async Response
     /*--------------------------------*\
     webRequest Structure: address:port/webSignal?parameter1=value1&parameter2=value2
 
@@ -16,7 +17,7 @@ export class RestAPI extends DaemonicDaemon {
     }
     
     Daemon Usage:
-    1) From other daemons call to register a new listen job: this.sender("RestAPI", "addListener", {
+    1) From other daemons call to register a new listen job: this.sender("WebPort", "addListener", {
         webSignal: [string] unique value for webSignal parameter.
         returnWithSignal: [string] upon valid webRequest, this is the signal with which this daemon will send a sender() request to the 'daemon' daemon.
         willRespond: [boolean] determines if this daemon should wait for a response after a valid webRequest.
@@ -24,12 +25,12 @@ export class RestAPI extends DaemonicDaemon {
         mandatoryParams: [array] [parameter1, parameter2]
         optionalParams: [array] [parameter3, parameter4]
     });
-    2) Submit a webResponse: this.sender("RestAPI", "sendWebResponse", {
+    2) Submit a webResponse: this.sender("WebPort", "sendWebResponse", {
         webSignal: [string] unique value for webSignal parameter.
         webResponse: [string] string to send as response to the webRequest.
         isHTML: [boolean] determines if this daemon should wait for a response after a valid webRequest.
     });
-    3) getListeners: this.sender("RestAPI", "getListeners", undefined, undefined, (data)=>{});
+    3) getListeners: this.sender("WebPort", "getListeners", undefined, undefined, (data)=>{});
     \*--------------------------------*/
     start(){
         this.variables["listenJob"]={};
@@ -124,38 +125,37 @@ export class RestAPI extends DaemonicDaemon {
             delete this.variables.listenJob[data];
         }else if(signal=="getListeners"){
             this.pushLog(`Listeners sent to '${from}'`);
-            this.sender(from, "RestAPIListeners", this.variables.listenJob, ID);
+            this.sender(from, "WebPortListeners", this.variables.listenJob, ID);
         }else if(signal=="sendWebResponse"){
             this.variables.listenJob[data.webSignal]["webResponseObj"]=data||{};
         }
     }
 }
-// ToDo: use async Response
 
-export class WebCTL extends DaemonicDaemon {
+export class WebCTL extends DaemonicDaemon{
     /*--------------------------------*\
-    Daemon Dependencies: RestAPI
+    Daemon Dependencies: WebPort
 
-    Daemon Config: {pageHTML: HTML code in string. RestAPI listeners will be injected at [INJECTJSON] as JSON.}
+    Daemon Config: {pageHTML: HTML code in string. WebPort listeners will be injected at [INJECTJSON] as JSON.}
 
-    Daemon Usage:
+    Daemon Usage: Basic WebPort Usage.
     
     \*--------------------------------*/
     async start(){
         this.variables.pageHTML = "[INJECTJSON]";
         readFile(this.config.pageLocation, "utf-8", (error, data)=>{if(!error && data){this.variables.pageHTML = data;}});
 
-        this.sender("RestAPI", "addListener", {
+        this.sender("WebPort", "addListener", {
             webSignal: "",
             respondWithSignal: "pageRequested",
             willRespond: true
         });
     }
-    stop(){this.sender("RestAPI", "removeListener", "");}
+    stop(){this.sender("WebPort", "removeListener", "");}
     receiver(from:string, signal:string, data:any, ID:string){
         if (signal=="pageRequested"){
-            this.sender("RestAPI", "getListeners", {}, undefined, (data:object)=>{this.variables.listeners=data;});
-            this.sender("RestAPI", "sendWebResponse", {
+            this.sender("WebPort", "getListeners", {}, undefined, (data:object)=>{this.variables.listeners=data;});
+            this.sender("WebPort", "sendWebResponse", {
                 webSignal: "",
                 webResponse: this.variables.pageHTML.replace("[INJECTJSON]", JSON.stringify({
                     faeryStatus: this.daemonicFaeryInstance.getFaeryStatus(),

@@ -8,21 +8,25 @@
             }
         },
         {
-            "fileLocation": "./daemons/restAPI.ts",
-            "daemonName": "RestAPI",
+            "fileLocation": "./daemons/webPort.ts",
+            "daemonName": "WebPort",
             "configs": {
                 "maxWebResponseTimeoutMS": 5000
             }
         },
         {
-            "fileLocation": "./daemons/restAPI.ts",
+            "fileLocation": "./daemons/webPort.ts",
             "daemonName": "WebCTL",
             "configs": {
-                "pageLocation": "./daemons/webctl.html"
+                "pageLocation": "./daemonDependencies/webctl.html"
             }
         },
         {
-            "fileLocation": "./daemons/systemctl.ts",
+            "fileLocation": "./daemons/daemonicCtl.ts",
+            "daemonName": "DaemonicCTL"
+        },
+        {
+            "fileLocation": "./daemons/systemCtl.ts",
             "daemonName": "SystemCTL"
         },
         {

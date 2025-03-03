@@ -2,16 +2,17 @@ import { DaemonicDaemon } from "../daemonicFaery.ts";
 import { type } from "node:os";
 import { exec } from "node:child_process";
 
-export class SystemCTL extends DaemonicDaemon {
+export class SystemCTL extends DaemonicDaemon{
     /*--------------------------------*\
-    Daemon Dependencies: RestAPI, TOTPAuth
+    Daemon Dependencies: WebPort, TOTPAuth
 
-    Daemon Config:
+    Daemon Config: ToDo: Pull response strings from Config.
 
-    Daemon Usage:
+    Daemon Usage: Basic WebPort Usage.
     
     \*--------------------------------*/
     async runSh(command: string){
+        this.pushLog("Executing shell command!");
         return new Promise((resolve)=>{
             exec(command, (error, stdout, stderr)=>{
                 resolve(stdout || stderr || "error");
@@ -21,93 +22,73 @@ export class SystemCTL extends DaemonicDaemon {
 
     onLoad(){this.variables["OS"]=type();}
     start(){
-        this.sender("RestAPI", "addListener", {
+        this.sender("WebPort", "addListener", {
             webSignal: "poweroff",
             respondWithSignal: "poweroffCalled",
             willRespond: false,
             mandatoryParams: ["totp"],
-            optionalParams: ["OSPass"]
+            optionalParams: ["OSPass"],
+            description: "Poweroff host system. (Linux only)"
         });
-        this.sender("RestAPI", "addListener", {
-            webSignal: "restart",
-            respondWithSignal: "restartCalled",
+        this.sender("WebPort", "addListener", {
+            webSignal: "reboot",
+            respondWithSignal: "rebootCalled",
             willRespond: false,
             mandatoryParams: ["totp"],
-            optionalParams: ["OSPass"]
+            optionalParams: ["OSPass"],
+            description: "Reboot host system. (Linux only)"
         });
-        this.sender("RestAPI", "addListener", {
+        this.sender("WebPort", "addListener", {
             webSignal: "sleep",
             respondWithSignal: "sleepCalled",
             willRespond: false,
             mandatoryParams: ["totp"],
-            optionalParams: ["OSPass"]
+            optionalParams: ["OSPass"],
+            description: "Put host system to Sleep. (Linux only)"
         });
-        this.sender("RestAPI", "addListener", {
+        this.sender("WebPort", "addListener", {
             webSignal: "runSh",
             respondWithSignal: "runShCalled",
             willRespond: true,
             mandatoryParams: ["totp", "sh"],
-            optionalParams: ["OSPass"]
-        });
-        this.sender("RestAPI", "addListener", {
-            webSignal: "getLogs",
-            respondWithSignal: "getLogsCalled",
-            willRespond: true,
-            mandatoryParams: ["totp"]
-        });
-        this.sender("RestAPI", "addListener", {
-            webSignal: "getFaeryStatus",
-            respondWithSignal: "getFaeryStatusCalled",
-            willRespond: true
-        });
-        this.sender("RestAPI", "addListener", {
-            webSignal: "getDaemonStatus",
-            respondWithSignal: "getDaemonStatusCalled",
-            willRespond: true,
-            mandatoryParams: ["daemonName"]
-        });
-        this.sender("RestAPI", "addListener", {
-            webSignal: "startDaemon",
-            respondWithSignal: "startDaemonCalled",
-            willRespond: false,
-            mandatoryParams: ["totp", "daemonName"]
-        });
-        this.sender("RestAPI", "addListener", {
-            webSignal: "stopDaemon",
-            respondWithSignal: "stopDaemonCalled",
-            willRespond: false,
-            mandatoryParams: ["totp", "daemonName"]
+            description: "Execute shell commands."
         });
     }
-    stop(){this.sender("RestAPI", "removeListener", "poweroff");}
+    stop(){
+        this.sender("WebPort", "removeListener", "poweroff");
+        this.sender("WebPort", "removeListener", "reboot");
+        this.sender("WebPort", "removeListener", "sleep");
+        this.sender("WebPort", "removeListener", "runSh");
+    }
     
     async receiver(from:string, signal:string, data:any, ID:string){
-        if(signal=="getFaeryStatusCalled"){
-            this.sender("RestAPI", "sendWebResponse", {webSignal: "getFaeryStatus", webResponse: JSON.stringify(this.daemonicFaeryInstance.getFaeryStatus())});
-        }else if(signal=="poweroffCalled"){ // webSignal=poweroff&totp=000000&OSPass=string
+        if(signal=="poweroffCalled"){
             this.sender("TOTPAuth", "validateTOTP", (data.get("totp")||""), undefined, async(totpValidation:boolean)=>{
                 if (this.variables.OS=="Linux" && totpValidation){
+                    this.pushLog("Attempting to Poweroff system!");
                     this.runSh(`echo ${data.get("OSPass")} | sudo -S systemctl poweroff`);
-                }else if(this.variables.OS=="Windows_NT" && totpValidation){
-                    this.runSh("ToDo");
                 }
             });
-        }else if(signal=="runShCalled"){ // webSignal=runSh&totp=000000&sh=cmd
+        }if(signal=="rebootCalled"){
             this.sender("TOTPAuth", "validateTOTP", (data.get("totp")||""), undefined, async(totpValidation:boolean)=>{
-                if (totpValidation){
-                    this.sender("RestAPI", "sendWebResponse", {webSignal: "runSh", webResponse: await this.runSh(data.get("sh"))});
-                }else{
-                    this.sender("RestAPI", "sendWebResponse", {webSignal: "runSh", webResponse: "Incorrect TOTP!"});
-                    // ToDo: Lock system if TOTP is incorrect more than 3 times
+                if (this.variables.OS=="Linux" && totpValidation){
+                    this.pushLog("Attempting to reboot system!");
+                    this.runSh(`echo ${data.get("OSPass")} | sudo -S systemctl reboot`);
                 }
             });
-        }else if(signal=="getLogsCalled"){
+        }if(signal=="sleepCalled"){
+            this.sender("TOTPAuth", "validateTOTP", (data.get("totp")||""), undefined, async(totpValidation:boolean)=>{
+                if (this.variables.OS=="Linux" && totpValidation){
+                    this.pushLog("Attempting to put system to sleep!");
+                    this.runSh(`echo ${data.get("OSPass")} | sudo -S systemctl sleep`);
+                }
+            });
+        }else if(signal=="runShCalled"){
             this.sender("TOTPAuth", "validateTOTP", (data.get("totp")||""), undefined, async(totpValidation:boolean)=>{
                 if (totpValidation){
-                    this.sender("RestAPI", "sendWebResponse", {webSignal: "getLogs", webResponse: JSON.stringify(this.daemonicFaeryInstance.getLogs())});
+                    this.sender("WebPort", "sendWebResponse", {webSignal: "runSh", webResponse: await this.runSh(data.get("sh"))});
                 }else{
-                    this.sender("RestAPI", "sendWebResponse", {webSignal: "getLogs", webResponse: "Incorrect TOTP!"});
-                    // ToDo: Lock system if TOTP is incorrect more than 3 times
+                    this.sender("WebPort", "sendWebResponse", {webSignal: "runSh", webResponse: "Incorrect TOTP!"});
                 }
             });
         }

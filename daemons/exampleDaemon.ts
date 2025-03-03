@@ -1,6 +1,6 @@
 import { DaemonicDaemon } from "../daemonicFaery.ts";
 
-export class DaemonName extends DaemonicDaemon {
+export class DaemonName extends DaemonicDaemon{
     /*--------------------------------*\
     Daemon Dependencies:
 

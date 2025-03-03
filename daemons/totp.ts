@@ -1,7 +1,7 @@
 import { DaemonicDaemon } from "../daemonicFaery.ts";
 import { TOTP } from "otpauth";
 
-export class TOTPAuth extends DaemonicDaemon {
+export class TOTPAuth extends DaemonicDaemon{
     onLoad(){
         this.variables["totp"]=new TOTP({
             "label": "DaemonicFaery: "+this.daemonicFaeryInstance.getFaeryStatus().hostname,
@@ -28,8 +28,8 @@ export class TOTPAuth extends DaemonicDaemon {
             this.pushLog(`Current TOTP sent to '${from}'`);
             this.sender(from, "CurrentTOTP", this.getCurrentTOTP(), ID);
         }else if(signal=="validateTOTP"){
-            this.pushLog(`TOTP validation requested by '${from}'`);
             this.sender(from, "TOTPValidation", this.validateTOTP(data || ""), ID);
+            // ToDo: Lock system if TOTP is incorrect more than 3 times
         }
     }
 }
