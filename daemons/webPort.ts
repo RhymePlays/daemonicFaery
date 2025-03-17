@@ -32,8 +32,8 @@ export class WebPort extends DaemonicDaemon{
     });
     3) getListeners: this.sender("WebPort", "getListeners", undefined, undefined, (data)=>{});
     \*--------------------------------*/
+    onLoad(){this.variables["listenJob"]={};}
     start(){
-        this.variables["listenJob"]={};
         this.variables["httpServer"]=createServer(async (req, res)=>{ // ToDo: Redo this bit
             let urlObj=new URL(`http://localhost:${this.config.port||80}${req.url}`);
             let webSignal=urlObj.pathname.split("/")[1];
@@ -125,9 +125,11 @@ export class WebPort extends DaemonicDaemon{
             delete this.variables.listenJob[data];
         }else if(signal=="getListeners"){
             this.pushLog(`Listeners sent to '${from}'`);
-            this.sender(from, "WebPortListeners", this.variables.listenJob, ID);
+            this.sender(from, "webPortListeners", this.variables.listenJob, ID);
         }else if(signal=="sendWebResponse"){
             this.variables.listenJob[data.webSignal]["webResponseObj"]=data||{};
+        }else if(signal=="getHttpServerInstance"){
+            this.sender(from, "httpServerInstance", this.variables.httpServer, ID);
         }
     }
 }

@@ -150,8 +150,9 @@
         .webSignalInputRow input{
             background-color: var(--shade20);
             color: var(--shade60);
-            border: solid 2px var(--shade40); /* var(--color100) */
-            border-radius: 10px;
+            border: solid 0px; /* var(--color100) */
+            border-radius: 10px 10px 0px 0px;
+            border-bottom: 3px solid var(--shade40);
             height: 35px;
             max-width: 228px;
             margin-right: 10px;
@@ -163,7 +164,7 @@
         .webSignalInputRow input:focus{outline: none;}
         .webSignalInputRow input::placeholder{color: var(--shade50);font-weight: 700;}
         .webSignalInputRow .requiredInput{
-            border: solid 3px var(--color100);
+            border-bottom: 3px solid var(--color100);
         }
         .webSignalItem hr{
             border: var(--shade40) 1px dashed;

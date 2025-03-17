@@ -1,37 +1,56 @@
 {
     "daemonDefinitions": [
         {
-            "fileLocation": "./daemons/totp.ts",
+            "fileLocation": "./daemons/LogCTL.ts",
+            "daemonName": "LogCTL",
+            "configs": {
+            }
+        },
+        {
+            "fileLocation": "./daemons/TOTP.ts",
             "daemonName": "TOTPAuth",
             "configs": {
                 "totpSecret": "NaishoNaishoNaishoNaishoNaishoNaishoNaishoNaisho"
             }
         },
         {
-            "fileLocation": "./daemons/webPort.ts",
+            "fileLocation": "./daemons/WebPort.ts",
             "daemonName": "WebPort",
             "configs": {
                 "maxWebResponseTimeoutMS": 5000
             }
         },
         {
-            "fileLocation": "./daemons/webPort.ts",
-            "daemonName": "WebCTL",
+            "fileLocation": "./daemons/SocketPort.ts",
+            "daemonName": "SocketPort",
             "configs": {
-                "pageLocation": "./daemonDependencies/webctl.html"
             }
         },
         {
-            "fileLocation": "./daemons/daemonicCtl.ts",
+            "fileLocation": "./daemons/WebPort.ts",
+            "daemonName": "WebCTL",
+            "configs": {
+                "pageLocation": "./daemonDependencies/WebCTLPage.html"
+            }
+        },
+        {
+            "fileLocation": "./daemons/DaemonicCTL.ts",
             "daemonName": "DaemonicCTL"
         },
         {
-            "fileLocation": "./daemons/systemCtl.ts",
+            "fileLocation": "./daemons/SystemCTL.ts",
             "daemonName": "SystemCTL"
         },
         {
-            "fileLocation": "./daemons/stockCheckST.ts",
-            "daemonName": "StockCheckST"
+            "fileLocation": "./daemons/NotificationCTL.ts",
+            "daemonName": "NotificationCTL"
+        },
+        {
+            "fileLocation": "./daemons/Pomodoro.ts",
+            "daemonName": "Pomodoro",
+            "configs": {
+                "disableAutoStart": true
+            }
         }
     ]
 }

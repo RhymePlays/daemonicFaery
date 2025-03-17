@@ -73,14 +73,18 @@ export class DaemonicFaery{
         for (let i=0;i<this.daemonDefinitions.length;i++){await this.loadDaemon(this.daemonDefinitions[i]);}
 
         /*--Starting Daemons [Step-3]--*/
-        for (let daemonName in this.daemons){this.startDaemon(daemonName);}
+        for (let daemonName in this.daemons){if(!this.daemons[daemonName].config.disableAutoStart){this.startDaemon(daemonName);}}
     }
     private async loadDaemon(daemonDefinition:daemonDefinitionInterface){ // Don't call.
         if(existsSync(daemonDefinition.fileLocation)){
             let imports = await import(daemonDefinition.fileLocation);
             if(daemonDefinition.daemonName in imports){
-                this.daemons[daemonDefinition.daemonName] = new imports[daemonDefinition.daemonName](this, daemonDefinition.configs);
-                this.pushLog(`Daemon: '${daemonDefinition.daemonName}' loaded`);
+                try{
+                    this.daemons[daemonDefinition.daemonName] = new imports[daemonDefinition.daemonName](this, daemonDefinition.configs);
+                    this.pushLog(`Daemon: '${daemonDefinition.daemonName}' loaded`);
+                }catch(e){
+                    this.pushLog(`Daemon: '${daemonDefinition.daemonName}' failed to load\n${e}`, false);
+                }
             }else{
                 this.pushLog(`Daemon: Couldn't find class '${daemonDefinition.daemonName}' in file: ${daemonDefinition.fileLocation}`, false);
             }
@@ -94,22 +98,30 @@ export class DaemonicFaery{
             this.pushLog(`Inter-Daemon-Comms: '${signal}' sent from '${from}' to '${to}'`);
             this.daemons[to].IDCReceiver(from, signal, data, ID);
         }else{
-            this.pushLog(`Inter-Daemon-Comms: Failed to sent '${signal}' from '${from}' to '${to}'`);
+            this.pushLog(`Inter-Daemon-Comms: Failed to send '${signal}' from '${from}' to '${to}'`);
             this.daemons[from].IDCReceiver("DaemonicFaery", "sendError", {}, ID);
         }
     }
     
     public startDaemon(daemonName:string){if (daemonName in this.daemons){ // Safe to call.
-        this.pushLog(`Daemon: '${daemonName}' started`);
-        this.daemons[daemonName].start();
-        this.daemons[daemonName].isActive=true;
+        try{
+            this.pushLog(`Daemon: '${daemonName}' started`);
+            this.daemons[daemonName].start();
+            this.daemons[daemonName].isActive=true;
+        }catch(e){
+            this.pushLog(`Daemon: '${daemonName}' failed to start\n${e}`, false);
+        }
     }}
     public stopDaemon(daemonName:string){if (daemonName in this.daemons){ // Safe to call.
-        this.pushLog(`Daemon: '${daemonName}' stopped`);
-        this.daemons[daemonName].stop();
-        this.daemons[daemonName].isActive=false;
+        try{
+            this.pushLog(`Daemon: '${daemonName}' stopped`);
+            this.daemons[daemonName].stop();
+            this.daemons[daemonName].isActive=false;
+        }catch(e){
+            this.pushLog(`Daemon: '${daemonName}' failed to stop\n${e}`, false);
+        }
     }}
-    public getDaemonStatus(daemonName:string):object {return { // Safe to call.
+    public getDaemonStatus(daemonName:string):{exists: boolean, isActive: boolean} {return { // Safe to call.
         exists: (daemonName in this.daemons)?true:false,
         isActive: (daemonName in this.daemons)?this.daemons[daemonName].isActive:false
     };}
@@ -139,7 +151,7 @@ export class DaemonicFaery{
 export class DaemonicDaemon{
     public isActive:boolean=false;
     protected daemonicFaeryInstance:DaemonicFaery;
-    protected config:any;
+    public config:any;
     public variables:any;
     public signalResponseCallbackFunctions:{[key:string]:Function} = {};
 
@@ -172,6 +184,8 @@ export class DaemonicDaemon{
     public start(){} // Don't call. Rather call daemonicFaeryInstance.start(daemonName); Safe to change definition.
     public stop(){} // Don't call. Rather call daemonicFaeryInstance.stop(daemonName); Safe to change definition.
 }
+
+
 
 // Start Point
 let daemonicFaeryInstance = new DaemonicFaery(process.argv[2] || "~/.config/daemonicFaery/config.json");

@@ -28,7 +28,7 @@ export class SystemCTL extends DaemonicDaemon{
             willRespond: false,
             mandatoryParams: ["totp"],
             optionalParams: ["OSPass"],
-            description: "Poweroff host system. (Linux only)"
+            description: "Poweroff host system. Linux only."
         });
         this.sender("WebPort", "addListener", {
             webSignal: "reboot",
@@ -36,7 +36,7 @@ export class SystemCTL extends DaemonicDaemon{
             willRespond: false,
             mandatoryParams: ["totp"],
             optionalParams: ["OSPass"],
-            description: "Reboot host system. (Linux only)"
+            description: "Reboot host system. Linux only."
         });
         this.sender("WebPort", "addListener", {
             webSignal: "sleep",
@@ -44,7 +44,7 @@ export class SystemCTL extends DaemonicDaemon{
             willRespond: false,
             mandatoryParams: ["totp"],
             optionalParams: ["OSPass"],
-            description: "Put host system to Sleep. (Linux only)"
+            description: "Put host system to Sleep. Linux only."
         });
         this.sender("WebPort", "addListener", {
             webSignal: "runSh",

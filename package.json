@@ -12,6 +12,9 @@
     "chalk": "^5.4.1",
     "node-html-parser": "^7.0.1",
     "otpauth": "^9.3.6",
-    "parse5": "^7.2.1"
+    "parse5": "^7.2.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "ws": "^8.18.1"
   }
 }
