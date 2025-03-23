@@ -7,10 +7,11 @@
             }
         },
         {
-            "fileLocation": "./daemons/TOTP.ts",
-            "daemonName": "TOTPAuth",
+            "fileLocation": "./daemons/AuthCTL.ts",
+            "daemonName": "AuthCTL",
             "configs": {
-                "totpSecret": "NaishoNaishoNaishoNaishoNaishoNaishoNaishoNaisho"
+                "totpSecret": "NaishoNaishoNaishoNaishoNaishoNaishoNaishoNaisho",
+                "userDBLocation": "./daemonDependencies/UserDB.json"
             }
         },
         {

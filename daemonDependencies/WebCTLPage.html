@@ -59,6 +59,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
         }#hostname{font-weight: 700;}
         #refreshButton{
             background-color: var(--shade20);
@@ -103,6 +104,7 @@
             display: flex;
             flex-direction: row;
             align-items: center;
+            flex-wrap: wrap;
             font-size: 25px;
             font-weight: 300;
             margin-bottom: 15px;
@@ -168,6 +170,28 @@
         }
         .webSignalItem hr{
             border: var(--shade40) 1px dashed;
+        }
+
+        @media only screen and (max-width: 1000px){
+            #main{
+                max-width: 100%;
+                border-right: 0;
+                border-left: 0;
+            }
+            #faeryRow1{
+                font-size: 35px;
+            }
+            #faeryRow2{
+                flex-direction: column;
+            }
+            #refreshButton{
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+            #output{
+                min-height: 300px;
+                max-height: 300px;
+            }
         }
     </style>
 </head>

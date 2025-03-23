@@ -4,7 +4,7 @@ import { exec } from "node:child_process";
 
 export class SystemCTL extends DaemonicDaemon{
     /*--------------------------------*\
-    Daemon Dependencies: WebPort, TOTPAuth
+    Daemon Dependencies: WebPort, AuthCTL
 
     Daemon Config: ToDo: Pull response strings from Config.
 
@@ -63,28 +63,28 @@ export class SystemCTL extends DaemonicDaemon{
     
     async receiver(from:string, signal:string, data:any, ID:string){
         if(signal=="poweroffCalled"){
-            this.sender("TOTPAuth", "validateTOTP", (data.get("totp")||""), undefined, async(totpValidation:boolean)=>{
+            this.sender("AuthCTL", "validateTOTP", (data.get("totp")||""), undefined, async(totpValidation:boolean)=>{
                 if (this.variables.OS=="Linux" && totpValidation){
                     this.pushLog("Attempting to Poweroff system!");
                     this.runSh(`echo ${data.get("OSPass")} | sudo -S systemctl poweroff`);
                 }
             });
         }if(signal=="rebootCalled"){
-            this.sender("TOTPAuth", "validateTOTP", (data.get("totp")||""), undefined, async(totpValidation:boolean)=>{
+            this.sender("AuthCTL", "validateTOTP", (data.get("totp")||""), undefined, async(totpValidation:boolean)=>{
                 if (this.variables.OS=="Linux" && totpValidation){
                     this.pushLog("Attempting to reboot system!");
                     this.runSh(`echo ${data.get("OSPass")} | sudo -S systemctl reboot`);
                 }
             });
         }if(signal=="sleepCalled"){
-            this.sender("TOTPAuth", "validateTOTP", (data.get("totp")||""), undefined, async(totpValidation:boolean)=>{
+            this.sender("AuthCTL", "validateTOTP", (data.get("totp")||""), undefined, async(totpValidation:boolean)=>{
                 if (this.variables.OS=="Linux" && totpValidation){
                     this.pushLog("Attempting to put system to sleep!");
                     this.runSh(`echo ${data.get("OSPass")} | sudo -S systemctl sleep`);
                 }
             });
         }else if(signal=="runShCalled"){
-            this.sender("TOTPAuth", "validateTOTP", (data.get("totp")||""), undefined, async(totpValidation:boolean)=>{
+            this.sender("AuthCTL", "validateTOTP", (data.get("totp")||""), undefined, async(totpValidation:boolean)=>{
                 if (totpValidation){
                     this.sender("WebPort", "sendWebResponse", {webSignal: "runSh", webResponse: await this.runSh(data.get("sh"))});
                 }else{

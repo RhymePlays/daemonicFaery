@@ -62,25 +62,25 @@ export class DaemonicCTL extends DaemonicDaemon{
         }else if (signal=="getDaemonStatusCalled"){    
             this.sender("WebPort", "sendWebResponse", {webSignal: "getDaemonStatus", webResponse: JSON.stringify(this.daemonicFaeryInstance.getDaemonStatus(data.get("daemonName")))});
         }else if(signal=="startDaemonCalled"){
-            this.sender("TOTPAuth", "validateTOTP", data.get("totp"), undefined, async(totpValidation:boolean)=>{
+            this.sender("AuthCTL", "validateTOTP", data.get("totp"), undefined, async(totpValidation:boolean)=>{
                 if (totpValidation){
                     this.daemonicFaeryInstance.startDaemon(data.get("daemonName"));
                 }
             });
         }else if(signal=="stopDaemonCalled"){
-            this.sender("TOTPAuth", "validateTOTP", data.get("totp"), undefined, async(totpValidation:boolean)=>{
+            this.sender("AuthCTL", "validateTOTP", data.get("totp"), undefined, async(totpValidation:boolean)=>{
                 if (totpValidation){
                     this.daemonicFaeryInstance.stopDaemon(data.get("daemonName"));
                 }
             });
         }else if(signal=="sendSignalCalled"){
-            this.sender("TOTPAuth", "validateTOTP", data.get("totp"), undefined, async(totpValidation:boolean)=>{
+            this.sender("AuthCTL", "validateTOTP", data.get("totp"), undefined, async(totpValidation:boolean)=>{
                 if (totpValidation){
                     this.sender(data.get("daemonName"), data.get("signal"), data.get("data"));
                 }
             });
         }else if(signal=="getLogsCalled"){
-            this.sender("TOTPAuth", "validateTOTP", data.get("totp"), undefined, async(totpValidation:boolean)=>{
+            this.sender("AuthCTL", "validateTOTP", data.get("totp"), undefined, async(totpValidation:boolean)=>{
                 if (totpValidation){
                     this.sender("WebPort", "sendWebResponse", {webSignal: "getLogs", webResponse: JSON.stringify(this.daemonicFaeryInstance.getLogs())});
                 }else{

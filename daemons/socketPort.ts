@@ -19,7 +19,6 @@ export class SocketPort extends DaemonicDaemon{
                 sockets: {}
             },
             server:{
-                authCreds: {},
                 handlers: {},
                 sockets: {}
             }
@@ -73,16 +72,6 @@ export class SocketPort extends DaemonicDaemon{
                 this.pushLog(`Socket '${data}' removed by '${from}'`);
                 this.variables["wsServer"].to(data).emit("disconnectReason", "Removal Requested");
                 this.variables["wsServer"].to(data).disconnect();
-            }
-        }else if(signal=="addAuthCreds"){ // data -> {user:str, pass:str}
-            if (typeof(data.user)=="string" && typeof(data.pass)=="string"){
-                this.pushLog(`AuthCreds for '${data.user}' added by ${from}`);
-                this.variables.server.authCreds[data.user]=this.passSalting(data.pass);
-            }
-        }else if(signal=="removeAuthCreds"){ // data -> user:str
-            if (data in this.variables.server.authCreds){
-                this.pushLog(`AuthCreds for '${data}' removed by ${from}`);
-                delete this.variables.server.authCreds[data];
             }
         }
 
@@ -169,7 +158,6 @@ export class SocketPort extends DaemonicDaemon{
         });
     }
 
-
     startClient(daemonName:string, ip:string="localhost", port:number=80, opts:any={}, onConnect:string, onDisconnect:string, onReceive:string){
         try{
             let socketID = randomUUID();
@@ -204,15 +192,11 @@ export class SocketPort extends DaemonicDaemon{
         }
     }
 
-
-    passSalting(rawPass:string):string{return rawPass;} // ToDo: Finish and move to AuthCTL.
-    authCheck(authCreds:any):Boolean{ // ToDo: Move to AuthCTL. TOTP will also be a part of AuthCTL.
+    authCheck(authCreds:any):Boolean{
         if ((this.config.server||{}).enableAuth){
-            if (this.variables.server.authCreds[(authCreds||{}).user]==this.passSalting((authCreds||{}).pass)){
-                return true;
-            }else{
-                return false;
-            }
+            let returnValue:Boolean = false;
+            this.sender("AuthCTL", "validateUser", authCreds, undefined, (data:boolean)=>{returnValue=data;});
+            return returnValue;
         }else{
             return true;
         }
