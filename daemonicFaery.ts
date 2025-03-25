@@ -3,17 +3,15 @@ import { randomUUID } from "node:crypto";
 import chalk from "chalk";
 
 interface daemonDefinitionInterface{fileLocation:string;daemonName:string;configs?:object;}
-interface daemonicFaeryConfigInterface{hostname?:string,daemonDefinitions?:daemonDefinitionInterface[],maxLogSize?:number}
+interface daemonicFaeryConfigInterface{hostname?:string,daemonDefinitions?:daemonDefinitionInterface[]}
 export class DaemonicFaery{
     // Configurable
     private hostname: string = "RyServer";
     private daemonDefinitions: daemonDefinitionInterface[] = [];
-    private maxLogSize: number = 100;
     
     // Non-Configurable
     private version:string = "2025.2.0";
     private startTime:number = Date.now();
-    private log:((boolean|number|string)[])[] = [];
     private daemons:{[key: string]: DaemonicDaemon} = {};
 
 
@@ -52,22 +50,13 @@ export class DaemonicFaery{
 
 
     // Functions
-    public pushLog(log:string, successStatus:boolean=true, source:string="DaemonicFaery"){ // Don't call this directly. Rather call DaemonicDaemon.pushLog();
-        while(this.log.length>=this.maxLogSize){this.log.shift();}
-        this.log.push([successStatus, Date.now(), source, log]);
-
-        let logItem = this.log[this.log.length-1];
-        if (logItem[2]=="DaemonicFaery"){
-            console.log(`${chalk.redBright("")}${chalk.bgRedBright.bold(logItem[2])}${chalk.redBright("")} ${logItem[0]?chalk.redBright("  ")+chalk.white(logItem[3]):chalk.redBright("  ")+chalk.redBright(logItem[3])}\n`);
-        }else{
-            console.log(`${chalk.cyan("")}${chalk.bgCyan.bold(logItem[2])}${chalk.cyan("")} ${logItem[0]?chalk.cyan("  ")+chalk.gray(logItem[3]):chalk.cyan("  ")+chalk.redBright(logItem[3])}\n`);
-        }
+    public pushLog(log:string, successStatus?:boolean, source?:string){ // Don't call this directly. Rather call DaemonicDaemon.pushLog();
+        this.IDCSender(this.constructor.name, "LogCTL", "pushLog", {log:log, successStatus:successStatus, source:source}, "");
     }
 
     private async loadConfig(configObj:daemonicFaeryConfigInterface){ // Don't call.
         this.hostname = configObj.hostname || this.hostname;
         this.daemonDefinitions = configObj.daemonDefinitions || this.daemonDefinitions;
-        this.maxLogSize = configObj.maxLogSize || this.maxLogSize;
         
         /*--Loading Daemons [Step-2]--*/
         for (let i=0;i<this.daemonDefinitions.length;i++){await this.loadDaemon(this.daemonDefinitions[i]);}
@@ -95,11 +84,11 @@ export class DaemonicFaery{
     
     public IDCSender(from:string, to:string, signal:string, data:object, ID:string){ // Don't call. Rather call DaemonicDaemon.sender();
         if(to in this.daemons){
-            this.pushLog(`Inter-Daemon-Comms: '${signal}' sent from '${from}' to '${to}'`);
+            (from!="LogCTL" && to!="LogCTL")?this.pushLog(`Inter-Daemon-Comms: '${signal}' sent from '${from}' to '${to}'`):undefined;
             this.daemons[to].IDCReceiver(from, signal, data, ID);
         }else{
-            this.pushLog(`Inter-Daemon-Comms: Failed to send '${signal}' from '${from}' to '${to}'`);
-            this.daemons[from].IDCReceiver("DaemonicFaery", "sendError", {}, ID);
+            (from!="LogCTL" && to!="LogCTL")?this.pushLog(`Inter-Daemon-Comms: Failed to send '${signal}' from '${from}' to '${to}'`):undefined;
+            (from!=this.constructor.name)?this.daemons[from].IDCReceiver("DaemonicFaery", "sendError", {}, ID):undefined;
         }
     }
     
@@ -129,7 +118,6 @@ export class DaemonicFaery{
         version: string,
         hostname: string,
         startTime: number,
-        maxLogSize: number,
         daemons: {daemonName:string, isActive:boolean}[]
     }{
         let daemons:{daemonName:string, isActive:boolean}[] = [];
@@ -138,11 +126,9 @@ export class DaemonicFaery{
             version: this.version,
             hostname: this.hostname,
             startTime: this.startTime,
-            maxLogSize: this.maxLogSize,
             daemons: daemons
         };
     }
-    public getLogs():((boolean|number|string)[])[] {return this.log;} // Safe to call.
 }
 
 

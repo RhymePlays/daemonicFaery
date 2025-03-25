@@ -15,7 +15,6 @@ export class DaemonName extends DaemonicDaemon{
         this.sender("DaemonName", "signal", {});
         this.sender("DaemonName", "signal", {}, undefined, ()=>{});
         this.pushLog("Log");
-        this.daemonicFaeryInstance.getLogs();
         this.daemonicFaeryInstance.getFaeryStatus();
         this.daemonicFaeryInstance.getDaemonStatus("DaemonName");
         this.daemonicFaeryInstance.startDaemon("DaemonName");

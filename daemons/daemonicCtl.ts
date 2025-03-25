@@ -82,7 +82,9 @@ export class DaemonicCTL extends DaemonicDaemon{
         }else if(signal=="getLogsCalled"){
             this.sender("AuthCTL", "validateTOTP", data.get("totp"), undefined, async(totpValidation:boolean)=>{
                 if (totpValidation){
-                    this.sender("WebPort", "sendWebResponse", {webSignal: "getLogs", webResponse: JSON.stringify(this.daemonicFaeryInstance.getLogs())});
+                    this.sender("LogCTL", "getLogs", undefined, undefined, (logs:any)=>{
+                        this.sender("WebPort", "sendWebResponse", {webSignal: "getLogs", webResponse: JSON.stringify(logs)});
+                    })
                 }else{
                     this.sender("WebPort", "sendWebResponse", {webSignal: "getLogs", webResponse: "Incorrect TOTP!"});
                 }
