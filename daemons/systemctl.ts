@@ -16,14 +16,14 @@ export class SystemCTL extends DaemonicDaemon{
             try{
                 exec(command, (error, stdout, stderr)=>{
                     if(stderr || error){
-                        this.pushLog("Sh execution error! -> "+command, false);
+                        // this.pushLog("Sh execution error! -> "+command, false);
                         resolve({response: `${stderr}\n${error}` || "Error!", success: false});
                     }else{
                         resolve({response: stdout || "Done!", success: true});
                     }
                 });
             }catch(e){
-                this.pushLog("Sh execution error! -> "+command, false);
+                // this.pushLog("Sh execution error! -> "+command, false);
                 resolve({response: "Error!", success: false});
             }
         })

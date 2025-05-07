@@ -24,38 +24,32 @@ export class CCTVRecorder extends DaemonicDaemon{
     }
     start(){
         for (let index=0;index<this.config.length;index++){
-            this.recorderLoop(index);
+            this.recorderLoop(index, this);
         }
     }
     stop(){for(const item of this.variables.threads){clearTimeout(item);}}
     receiver(from:string, signal:string, data:any, ID:string){}
 
 
-    async recordFunc(index:number, sourceUrl:string, saveDirectory:string){
+    async recordFunc(index:number, sourceUrl:string, saveDirectory:string, daemonObj:CCTVRecorder){
         let dateObj = new Date();
         let filename = `${dateObj.getHours()}_${dateObj.getMinutes()}_${dateObj.getSeconds()}_${randomUUID()}.mkv`;
-        this.sender("SystemCTL", "runSh", `ffmpeg -i "${sourceUrl}" -c copy -t ${this.config[index].clipLengthInSec} "${saveDirectory}/${filename}"`, undefined, async(returnValue:{response:string, success:boolean})=>{
-            if (returnValue.success){
-                this.variables.threads[index]=setTimeout(this.recorderLoop, 1000, index);
-            }else{
-                this.pushLog(`CRITICAL: ${this.config[index].label||this.config.indexOf(this.config[index])} Couldn't record!`, false);
-                this.variables.threads[index]=setTimeout(this.recorderLoop, 10*60*1000, index);
-            }
+        daemonObj.sender("SystemCTL", "runSh", `ffmpeg -i "${sourceUrl}" -c copy -t ${daemonObj.config[index].clipLengthInSec} "${saveDirectory}/${filename}"`, undefined, async(returnValue:{response:string, success:boolean})=>{
+            daemonObj.variables.threads[index]=setTimeout(daemonObj.recorderLoop, 1000, index, daemonObj);
         });
 
         // Live Playback with MPV
         setTimeout(()=>{
-            this.sender("SystemCTL", "runSh", `mpv "${saveDirectory}/${filename}"`, undefined, (data:{response:string, success:boolean})=>{
-                console.log(data);
-            });
+            daemonObj.sender("SystemCTL", "runSh", `mpv "${saveDirectory}/${filename}"`);
         }, 8000); // Playback Delay
     }
-    async recorderLoop(index:number){
+    async recorderLoop(index:number, daemonObj:CCTVRecorder){
         let dateObj = new Date();
-        let saveDirectory = `${this.config[index].saveDirectory}/${this.config[index].label||this.config.indexOf(this.config[index])}/${dateObj.getFullYear()}_${dateObj.getMonth()}_${dateObj.getMonth()+1}_${dateObj.getDate()}`;
-        this.sender("SystemCTL", "runSh", `mkdir -p "${saveDirectory}"`, undefined, async(returnValue:{response:string, success:boolean})=>{
+
+        let saveDirectory = `${daemonObj.config[index].saveDirectory}/${daemonObj.config[index].label||daemonObj.config.indexOf(daemonObj.config[index])}/${dateObj.getFullYear()}_${dateObj.getMonth()}_${dateObj.getMonth()+1}_${dateObj.getDate()}`;
+        daemonObj.sender("SystemCTL", "runSh", `mkdir -p "${saveDirectory}"`, undefined, async(returnValue:{response:string, success:boolean})=>{
             if (returnValue.success){
-                if (this.config[index].MACAddress){
+                if (daemonObj.config[index].MACAddress){
                     try{
                         let DHCPRes = await fetch("http://192.168.0.1/dhcp_clients.asp", {mode: "no-cors"});
                         if (DHCPRes.ok){
@@ -64,36 +58,36 @@ export class CCTVRecorder extends DaemonicDaemon{
                                 let clientIP:string|undefined=undefined;
     
                                 for (let clientIndex=0;clientIndex<dhcpClients.length;clientIndex++){
-                                    if(dhcpClients[clientIndex].mac==this.config[index].MACAddress){
+                                    if(dhcpClients[clientIndex].mac==daemonObj.config[index].MACAddress){
                                         clientIP=dhcpClients[clientIndex].ip_address;
                                         break
                                     }
                                 }
     
                                 if (typeof(clientIP)=="string"){
-                                    this.recordFunc(index, this.config[index].sourceUrl.replaceAll("{IP}", clientIP), saveDirectory);
+                                    daemonObj.recordFunc(index, daemonObj.config[index].sourceUrl.replaceAll("{IP}", clientIP), saveDirectory, daemonObj);
                                 }else{
-                                    this.pushLog(`CRITICAL: ${this.config[index].label||this.config.indexOf(this.config[index])} IP Couldn't be located from MAC!`, false);
-                                    this.variables.threads[index]=setTimeout(this.recorderLoop, 10*60*1000, index);
+                                    daemonObj.pushLog(`CRITICAL: ${daemonObj.config[index].label||daemonObj.config.indexOf(daemonObj.config[index])} IP Couldn't be located from MAC!`, false);
+                                    daemonObj.variables.threads[index]=setTimeout(daemonObj.recorderLoop, 10*60*1000, index, daemonObj);
                                 }
                             }catch(e){
-                                this.pushLog(`CRITICAL: ${this.config[index].label||this.config.indexOf(this.config[index])} Couldn't parse DHCP list!`, false);
-                                this.variables.threads[index]=setTimeout(this.recorderLoop, 10*60*1000, index);
+                                daemonObj.pushLog(`CRITICAL: ${daemonObj.config[index].label||daemonObj.config.indexOf(daemonObj.config[index])} Couldn't parse DHCP list!`, false);
+                                daemonObj.variables.threads[index]=setTimeout(daemonObj.recorderLoop, 10*60*1000, index, daemonObj);
                             }
                         }else{
-                            this.pushLog(`CRITICAL: ${this.config[index].label||this.config.indexOf(this.config[index])} Couldn't retrieve DHCP list from router!`, false);
-                            this.variables.threads[index]=setTimeout(this.recorderLoop, 10*60*1000, index);
+                            daemonObj.pushLog(`CRITICAL: ${daemonObj.config[index].label||daemonObj.config.indexOf(daemonObj.config[index])} Couldn't retrieve DHCP list from router!`, false);
+                            daemonObj.variables.threads[index]=setTimeout(daemonObj.recorderLoop, 10*60*1000, index, daemonObj);
                         }
                     }catch(e){
-                        this.pushLog(`CRITICAL: ${this.config[index].label||this.config.indexOf(this.config[index])} Couldn't retrieve MAC list from router!`, false);
-                        this.variables.threads[index]=setTimeout(this.recorderLoop, 10*60*1000, index);
+                        daemonObj.pushLog(`CRITICAL: ${daemonObj.config[index].label||daemonObj.config.indexOf(daemonObj.config[index])} Couldn't retrieve MAC list from router!`, false);
+                        daemonObj.variables.threads[index]=setTimeout(daemonObj.recorderLoop, 10*60*1000, index, daemonObj);
                     }
                 }else{
-                    this.recordFunc(index, this.config[index].sourceUrl, saveDirectory);
+                    daemonObj.recordFunc(index, daemonObj.config[index].sourceUrl, saveDirectory, daemonObj);
                 }
             }else{
-                this.pushLog(`CRITICAL: ${this.config[index].label||this.config.indexOf(this.config[index])} Save location couldn't be initialized!`, false);
-                this.variables.threads[index]=setTimeout(this.recorderLoop, 10*60*1000, index);
+                daemonObj.pushLog(`CRITICAL: ${daemonObj.config[index].label||daemonObj.config.indexOf(daemonObj.config[index])} Save location couldn't be initialized!`, false);
+                daemonObj.variables.threads[index]=setTimeout(daemonObj.recorderLoop, 10*60*1000, index, daemonObj);
             }
         });
     }

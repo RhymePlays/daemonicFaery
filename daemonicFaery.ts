@@ -135,7 +135,7 @@ export class DaemonicFaery{
 // Daemon Related
 export class DaemonicDaemon{
     public isActive:boolean=false;
-    protected daemonicFaeryInstance:DaemonicFaery;
+    public daemonicFaeryInstance:DaemonicFaery;
     public config:any;
     public variables:any;
     public signalResponseCallbackFunctions:{[key:string]:Function} = {};
@@ -149,8 +149,8 @@ export class DaemonicDaemon{
     }
 
     public onLoad(){} // Don't call. Safe to change definition.
-    protected pushLog(log:string, successStatus:boolean=true){this.daemonicFaeryInstance.pushLog(log, successStatus, this.constructor.name);} // Safe to call. Don't change definition.
-    protected sender(to:string, signal:string, data:any, ID:string|undefined=undefined, signalResponseCallback?:Function){ // Safe to call. Don't change definition.
+    public pushLog(log:string, successStatus:boolean=true){this.daemonicFaeryInstance.pushLog(log, successStatus, this.constructor.name);} // Safe to call. Don't change definition.
+    public sender(to:string, signal:string, data:any, ID:string|undefined=undefined, signalResponseCallback?:Function){ // Safe to call. Don't change definition.
         let correctID=ID||randomUUID();
         if (typeof(signalResponseCallback)=="function"){
             this.signalResponseCallbackFunctions[correctID]=signalResponseCallback; //ToDo: Make this Async.
