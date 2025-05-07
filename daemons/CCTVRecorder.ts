@@ -31,16 +31,24 @@ export class CCTVRecorder extends DaemonicDaemon{
     receiver(from:string, signal:string, data:any, ID:string){}
 
 
-    recordFunc(index:number, sourceUrl:string, saveDirectory:string){
+    async recordFunc(index:number, sourceUrl:string, saveDirectory:string){
         let dateObj = new Date();
-        this.sender("SystemCTL", "runSh", `ffmpeg -i "${sourceUrl}" -c copy -t ${this.config[index].clipLengthInSec} "${saveDirectory}/${dateObj.getHours()}_${dateObj.getMinutes()}_${dateObj.getSeconds()}_${randomUUID()}.mkv"`, undefined, (returnValue:{response:string, success:boolean})=>{
+        let filename = `${dateObj.getHours()}_${dateObj.getMinutes()}_${dateObj.getSeconds()}_${randomUUID()}.mkv`;
+        this.sender("SystemCTL", "runSh", `ffmpeg -i "${sourceUrl}" -c copy -t ${this.config[index].clipLengthInSec} "${saveDirectory}/${filename}"`, undefined, async(returnValue:{response:string, success:boolean})=>{
             if (returnValue.success){
-                this.variables.threads[index]=setTimeout(this.recorderLoop, (this.config[index].clipLengthInSec+1)*1000, index);
+                this.variables.threads[index]=setTimeout(this.recorderLoop, 1000, index);
             }else{
                 this.pushLog(`CRITICAL: ${this.config[index].label||this.config.indexOf(this.config[index])} Couldn't record!`, false);
                 this.variables.threads[index]=setTimeout(this.recorderLoop, 10*60*1000, index);
             }
         });
+
+        // Live Playback with MPV
+        setTimeout(()=>{
+            this.sender("SystemCTL", "runSh", `mpv "${saveDirectory}/${filename}"`, undefined, (data:{response:string, success:boolean})=>{
+                console.log(data);
+            });
+        }, 8000); // Playback Delay
     }
     async recorderLoop(index:number){
         let dateObj = new Date();

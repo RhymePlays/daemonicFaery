@@ -71,13 +71,13 @@
                     "label": "CAM-1",
                     "clipLengthInSec": 600,
                     "sourceUrl": "rtsp://admin:admin123456@192.168.0.151:554/ch=1?subtype=0",
-                    "saveDirectory": "D:/ryserver/storage1/CCTV"
+                    "saveDirectory": "/storage/hdd1/CCTV"
                 },
                 {
                     "label": "CAM-2",
                     "clipLengthInSec": 600,
                     "sourceUrl": "rtsp://admin:admin123456@{IP}:8554/profile0",
-                    "saveDirectory": "D:/ryserver/storage1/CCTV",
+                    "saveDirectory": "/storage/hdd1/CCTV",
                     "MACAddress": "d8:32:14:5f:da:15"
                 }
             ]
