@@ -3,28 +3,22 @@ import chalk from "chalk";
 
 export class LogCTL extends DaemonicDaemon{
     /*--------------------------------*\
-    Daemon Dependencies:
-
-    Daemon Config:
-
-    Daemon Usage:
-    
+    Daemon Config: {
+        maxLogSize: number
+    }
     \*--------------------------------*/
     onLoad(){
+        this.isActive=true;
         this.variables.log = [];
         this.config.maxLogSize=this.config.maxLogSize||100;
     }
-    start(){
-
-    }
-    stop(){
-
-    }
+    start(){}
+    stop(){}
     receiver(from:string, signal:string, data:any, ID:string){
         switch(signal){
 
             case "pushLog":
-                if(typeof(data.log)=="string"){
+                if(typeof(data.log)=="string" && this.isActive){
                     while(this.variables.log.length>=this.config.maxLogSize){this.variables.log.shift();}
                     this.variables.log.push([
                         data.successStatus||true,
@@ -33,12 +27,7 @@ export class LogCTL extends DaemonicDaemon{
                         data.log
                     ]);
 
-                    let logItem = this.variables.log[this.variables.log.length-1];
-                    if (logItem[2]=="DaemonicFaery"){
-                        console.log(`${chalk.redBright("")}${chalk.bgRedBright.bold(logItem[2])}${chalk.redBright("")} ${logItem[0]?chalk.redBright("  ")+chalk.white(logItem[3]):chalk.redBright("  ")+chalk.redBright(logItem[3])}\n`);
-                    }else{
-                        console.log(`${chalk.cyan("")}${chalk.bgCyan.bold(logItem[2])}${chalk.cyan("")} ${logItem[0]?chalk.cyan("  ")+chalk.gray(logItem[3]):chalk.cyan("  ")+chalk.redBright(logItem[3])}\n`);
-                    }
+                    this.printNewestLog();
                 }
                 break;
             
@@ -49,6 +38,15 @@ export class LogCTL extends DaemonicDaemon{
             case "getLogs":
                 this.sender(from, "logs", this.variables.log, ID);
 
+        }
+    }
+
+    printNewestLog(){
+        let logItem = this.variables.log[this.variables.log.length-1];
+        if (logItem[2]=="DaemonicFaery"){
+            console.log(`${chalk.redBright("")}${chalk.bgRedBright.bold(logItem[2])}${chalk.redBright("")} ${logItem[0]?chalk.redBright("  ")+chalk.white(logItem[3]):chalk.redBright("  ")+chalk.redBright(logItem[3])}\n`);
+        }else{
+            console.log(`${chalk.cyan("")}${chalk.bgCyan.bold(logItem[2])}${chalk.cyan("")} ${logItem[0]?chalk.cyan("  ")+chalk.gray(logItem[3]):chalk.cyan("  ")+chalk.redBright(logItem[3])}\n`);
         }
     }
 }

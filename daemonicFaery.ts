@@ -1,6 +1,5 @@
 import { readFile, existsSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import chalk from "chalk";
 
 interface daemonDefinitionInterface{fileLocation:string;daemonName:string;configs?:object;}
 interface daemonicFaeryConfigInterface{hostname?:string,daemonDefinitions?:daemonDefinitionInterface[]}
@@ -10,7 +9,7 @@ export class DaemonicFaery{
     private daemonDefinitions: daemonDefinitionInterface[] = [];
     
     // Non-Configurable
-    private version:string = "2025.2.0";
+    private version:string = "2025.3.0";
     private startTime:number = Date.now();
     private daemons:{[key: string]: DaemonicDaemon} = {};
 
@@ -33,7 +32,7 @@ export class DaemonicFaery{
                             this.loadConfig(returnValue);
                         }
                     }else{
-                        this.pushLog("Config: Couldn't reading file.", false);
+                        this.pushLog("Config: Couldn't read file.", false);
                         this.loadConfig(returnValue);
                     }
                 });

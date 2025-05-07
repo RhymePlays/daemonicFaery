@@ -12,11 +12,20 @@ export class SystemCTL extends DaemonicDaemon{
     
     \*--------------------------------*/
     async runSh(command: string){
-        this.pushLog("Executing shell command!");
-        return new Promise((resolve)=>{
-            exec(command, (error, stdout, stderr)=>{
-                resolve(stdout || stderr || "error");
-            });
+        return new Promise((resolve, reject)=>{
+            try{
+                exec(command, (error, stdout, stderr)=>{
+                    if(stderr || error){
+                        this.pushLog("Sh execution error! -> "+command, false);
+                        resolve({response: `${stderr}\n${error}` || "Error!", success: false});
+                    }else{
+                        resolve({response: stdout || "Done!", success: true});
+                    }
+                });
+            }catch(e){
+                this.pushLog("Sh execution error! -> "+command, false);
+                resolve({response: "Error!", success: false});
+            }
         })
     }
 
@@ -91,6 +100,12 @@ export class SystemCTL extends DaemonicDaemon{
                     this.sender("WebPort", "sendWebResponse", {webSignal: "runSh", webResponse: "Incorrect TOTP!"});
                 }
             });
+        }
+
+        else if(signal=="runSh"){
+            if(data){
+                this.sender(from, "runShCB", await this.runSh(data), ID);
+            }
         }
     }
 }

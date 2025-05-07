@@ -20,7 +20,7 @@ export class SocketPortClient{
         this.connect();
     }
 
-    send(data){this.wsClient.emit("serverReceiver", data);}
+    send(type, payload){this.wsClient.emit("serverReceiver", {type: type, payload, payload});}
     emptyCallback(arg=false){}
     connect(){
         this.wsClient = io(`ws://${this.ip}:${this.port}`);
@@ -30,12 +30,14 @@ export class SocketPortClient{
                 this.wsClient.emit("passport", this.passport);
                 this.wsClient.once("passportAccepted", ()=>{
                     this.onConnectCallback();
-                    this.wsClient.on("clientReceiver", (data)=>{
-                        this.onReceiveCallback(data);    
-                    });
                 });
             });
         
+            this.wsClient.on("clientReceiver", (data)=>{
+                data=data||{};
+                this.onReceiveCallback(data.type, data.payload);
+            });
+
             this.wsClient.once("disconnectReason", (data)=>{
                 this.disconnectReason=data;
             });this.wsClient.once("disconnect", ()=>{

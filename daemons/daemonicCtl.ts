@@ -2,12 +2,11 @@ import { DaemonicDaemon } from "../daemonicFaery.ts";
 
 export class DaemonicCTL extends DaemonicDaemon{
     /*--------------------------------*\
-    Daemon Dependencies: WebPort, TOTP
+    Daemon Dependencies: WebPort, AuthCTL
 
     Daemon Config: ToDo: Pull response strings from Config.
 
     Daemon Usage: Basic WebPort Usage.
-    
     \*--------------------------------*/
     start(){
         this.sender("WebPort", "addListener", {

@@ -211,33 +211,7 @@
             </div>
         </div>
         <div id="output"></div>
-        <div id="webSignalContainer">
-
-
-            <!-- <div class="webSignalItem">
-                <div class="titleRow">
-                    <div class="sendButton">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M120-160v-640l760 320-760 320Zm80-120 474-200-474-200v140l240 60-240 60v140Zm0 0v-400 400Z"/></svg>
-                    </div>
-                    <div class="title">webSignal</div>
-                    <div class="daemonName">DaemonName</div>
-                    <div class="willReturnIcon">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M760-200v-160q0-50-35-85t-85-35H273l144 144-57 56-240-240 240-240 57 56-144 144h367q83 0 141.5 58.5T840-360v160h-80Z"/></svg>
-                    </div>
-                </div>
-                <div class="webSignalDescriptionRow">description string</div>
-                <div class="webSignalInputRow">
-                    <input class="requiredInput" type="text" id="" placeholder="yeet">
-                    <input class="requiredInput" type="text" id="" placeholder="">
-                    <input type="text" id="" placeholder="">
-                    <input type="text" id="" placeholder="">
-                    <input type="text" id="" placeholder="">
-                </div>
-                <hr>
-            </div> -->
-
-
-        </div>
+        <div id="webSignalContainer"></div>
     </div>
     <script>
         // Variables
@@ -277,11 +251,22 @@
             }
         }
 
+        function formatTime(epochTimeMS){
+            let timeDiff = Date.now()-epochTimeMS;
+            if (timeDiff<3600000){
+                return `${Math.floor(timeDiff/60000)}m`;
+            }else if(timeDiff<86400000){
+                return `${Math.floor(timeDiff/3600000)}h`;
+            }else{
+                return `${Math.floor(timeDiff/86400000)}d`;
+            }
+        }
+
         // Start Point
         document.getElementById("hostname").innerText = injectedData.faeryStatus.hostname;
         document.getElementById("version").innerText = injectedData.faeryStatus.version;
         document.getElementById("daemons").innerText = injectedData.faeryStatus.daemons.length;
-        document.getElementById("uptime").innerText = `${Math.floor((Date.now()-injectedData.faeryStatus.startTime)/(1000*60*60))}h`;
+        document.getElementById("uptime").innerText = formatTime(injectedData.faeryStatus.startTime);
         for (item in injectedData.webSignals){
             let params = [];
             let inputElems = [];

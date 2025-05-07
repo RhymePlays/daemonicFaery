@@ -29,7 +29,7 @@ export class SocketPort extends DaemonicDaemon{
         if(this.daemonicFaeryInstance.getDaemonStatus("WebPort").isActive && !(this.config.server||{}).dontUseWebPort){
             this.sender("WebPort", "getHttpServerInstance", undefined, undefined, (httpServerInstance:any)=>{
                 this.pushLog("Hosting on top of WebPort");
-                this.startServer(httpServerInstance, {});
+                this.startServer(httpServerInstance, {cors: {origin: "*", methods: ["GET", "POST"]}});
             });
         }else{
             this.pushLog("Hosting Solo");
@@ -45,7 +45,7 @@ export class SocketPort extends DaemonicDaemon{
         \*------------*/
         
         if(signal=="addHandler"){ // data -> {onConnect:str, onDisconnect:str, onReceive:str}
-            this.pushLog(`Handler '${data}' registered`);
+            this.pushLog(`Handler '${from}' registered`);
             this.variables.server.handlers[from]={
                 onConnect: data.onConnect||"onSocketConnect",
                 onDisconnect: data.onDisconnect||"onSocketDisconnect",
@@ -61,11 +61,11 @@ export class SocketPort extends DaemonicDaemon{
                 }
                 delete this.variables.server.handlers[data];
             }
-        }else if(signal=="sendToSocket"){ // data -> {socketID:str, data:any}
+        }else if(signal=="sendToSocket"){ // data -> {socketID:str, type:string, payload:any}
             /* [Can only send to sockets registered to this handler] */
             if(((this.variables.server.handlers[from]||{}).sockets||[]).includes(data.socketID)){
-                this.pushLog(`Data sent from '${from}' to '${data.socketID}'`);
-                this.variables["wsServer"].to(data.socketID).emit("clientReceiver", data.data);
+                // this.pushLog(`Data sent from '${from}' to '${data.socketID}'`);
+                this.variables["wsServer"].to(data.socketID).emit("clientReceiver", {type:data.type, payload:data.payload});
             }
         }else if(signal=="removeSocket"){ // data -> socketID:str
             if(data in this.variables.server.sockets){
@@ -118,7 +118,7 @@ export class SocketPort extends DaemonicDaemon{
                     this.sender(
                         passport.handler,
                         this.variables.server.handlers[passport.handler].onConnect,
-                        {socketID:socket.id, data:passport.data}
+                        {socketID:socket.id, passport:passport}
                     );
                     socket.emit("passportAccepted", true);
                 }else{
@@ -149,10 +149,11 @@ export class SocketPort extends DaemonicDaemon{
 
             // OnReceive
             socket.on("serverReceiver", (data)=>{
+                data=data||{};
                 this.sender(
                     this.variables.server.sockets[socket.id],
                     this.variables.server.handlers[this.variables.server.sockets[socket.id]].onReceive,
-                    {socketID:socket.id, data:data}
+                    {socketID:socket.id, type:data.type, payload:data.payload}
                 );
             });
         });
