@@ -52,6 +52,7 @@ export class DaemonicFaery{
     public pushLog(log:string, successStatus?:boolean, source?:string){ // Don't call this directly. Rather call DaemonicDaemon.pushLog();
         this.IDCSender(this.constructor.name, "LogCTL", "pushLog", {log:log, successStatus:successStatus, source:source}, "");
     }
+    public generateUUID():string{return randomUUID();}
 
     private async loadConfig(configObj:daemonicFaeryConfigInterface){ // Don't call.
         this.hostname = configObj.hostname || this.hostname;

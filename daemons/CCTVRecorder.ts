@@ -13,6 +13,7 @@ export class CCTVRecorder extends DaemonicDaemon{
             sourceUrl: "rtsp://admin:admin123456@{IP}/ch=1?subtype=0",
             MACAddress: [string] || [undefined],
             saveDirectory: [string],
+            disableAutoPreview?: [boolean]
         }
     ]
 
@@ -21,14 +22,36 @@ export class CCTVRecorder extends DaemonicDaemon{
     \*--------------------------------*/
     onLoad(){
         this.variables["threads"]={};
+        this.variables["currentlyRecording"]={};
     }
     start(){
         for (let index=0;index<this.config.length;index++){
             this.recorderLoop(index, this);
         }
+        this.sender("WebPort", "addListener", {
+            webSignal: "previewCamera",
+            respondWithSignal: "previewCameraCalled",
+            willRespond: false,
+            mandatoryParams: ["index"],
+            description: "Switch which camera is displayed on the screen."
+        });
     }
-    stop(){for(const item of this.variables.threads){clearTimeout(item);}}
-    receiver(from:string, signal:string, data:any, ID:string){}
+    stop(){
+        for(const item of this.variables.threads){clearTimeout(item);}
+        this.sender("WebPort", "removeListener", "switchCamera");
+    }
+    receiver(from:string, signal:string, data:any, ID:string){
+        switch (signal){
+            case "previewCameraCalled":
+                if (data.get("index") in this.variables.currentlyRecording){
+                    this.sender("SystemCTL", "runSh", "pkill mpv");
+                    setTimeout((daemonObj)=>{
+                        this.sender("SystemCTL", "runSh", `mpv "${daemonObj.variables.currentlyRecording[data.get("index")]}"`);
+                    }, 1000, this);
+                }
+                break
+        }
+    }
 
 
     async recordFunc(index:number, sourceUrl:string, saveDirectory:string, daemonObj:CCTVRecorder){
@@ -38,15 +61,19 @@ export class CCTVRecorder extends DaemonicDaemon{
             daemonObj.variables.threads[index]=setTimeout(daemonObj.recorderLoop, 1000, index, daemonObj);
         });
 
+        
         // Live Playback with MPV
-        setTimeout(()=>{
-            daemonObj.sender("SystemCTL", "runSh", `mpv "${saveDirectory}/${filename}"`);
-        }, 8000); // Playback Delay
+        daemonObj.variables.currentlyRecording[index]=`${saveDirectory}/${filename}`;
+        if (!daemonObj.config[index].disableAutoPreview){
+            setTimeout(()=>{
+                daemonObj.sender("SystemCTL", "runSh", `mpv "${saveDirectory}/${filename}"`);
+            }, 8000); // Playback Delay
+        }
     }
     async recorderLoop(index:number, daemonObj:CCTVRecorder){
         let dateObj = new Date();
 
-        let saveDirectory = `${daemonObj.config[index].saveDirectory}/${daemonObj.config[index].label||daemonObj.config.indexOf(daemonObj.config[index])}/${dateObj.getFullYear()}_${dateObj.getMonth()}_${dateObj.getMonth()+1}_${dateObj.getDate()}`;
+        let saveDirectory = `${daemonObj.config[index].saveDirectory}/${daemonObj.config[index].label||daemonObj.config.indexOf(daemonObj.config[index])}/${dateObj.getFullYear()}_${dateObj.getMonth()+1}_${dateObj.getDate()}`;
         daemonObj.sender("SystemCTL", "runSh", `mkdir -p "${saveDirectory}"`, undefined, async(returnValue:{response:string, success:boolean})=>{
             if (returnValue.success){
                 if (daemonObj.config[index].MACAddress){
@@ -67,7 +94,7 @@ export class CCTVRecorder extends DaemonicDaemon{
                                 if (typeof(clientIP)=="string"){
                                     daemonObj.recordFunc(index, daemonObj.config[index].sourceUrl.replaceAll("{IP}", clientIP), saveDirectory, daemonObj);
                                 }else{
-                                    daemonObj.pushLog(`CRITICAL: ${daemonObj.config[index].label||daemonObj.config.indexOf(daemonObj.config[index])} IP Couldn't be located from MAC!`, false);
+                                    daemonObj.pushLog(`CRITICAL: ${daemonObj.config[index].label||daemonObj.config.indexOf(daemonObj.config[index])} IP couldn't be located from MAC!`, false);
                                     daemonObj.variables.threads[index]=setTimeout(daemonObj.recorderLoop, 10*60*1000, index, daemonObj);
                                 }
                             }catch(e){

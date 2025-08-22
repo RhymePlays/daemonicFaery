@@ -1,6 +1,6 @@
 import { DaemonicDaemon } from "../daemonicFaery.ts";
 import { type } from "node:os";
-import { exec } from "node:child_process";
+import { exec, spawn } from "node:child_process";
 
 export class SystemCTL extends DaemonicDaemon{
     /*--------------------------------*\
@@ -12,21 +12,28 @@ export class SystemCTL extends DaemonicDaemon{
     
     \*--------------------------------*/
     async runSh(command: string){
-        return new Promise((resolve, reject)=>{
-            try{
-                exec(command, (error, stdout, stderr)=>{
-                    if(stderr || error){
-                        // this.pushLog("Sh execution error! -> "+command, false);
-                        resolve({response: `${stderr}\n${error}` || "Error!", success: false});
-                    }else{
-                        resolve({response: stdout || "Done!", success: true});
-                    }
-                });
-            }catch(e){
-                // this.pushLog("Sh execution error! -> "+command, false);
-                resolve({response: "Error!", success: false});
-            }
-        })
+        let process = exec(command, );
+        return {
+            processObj: process,
+            pid: process.pid,
+        }
+        return {
+            process: new Promise((resolve)=>{
+                try{
+                    exec(command, (error, stdout, stderr)=>{
+                        if(stderr || error){
+                            // this.pushLog("Sh execution error! -> "+command, false);
+                            resolve({response: `${stderr}\n${error}` || "Error!", success: false});
+                        }else{
+                            resolve({response: stdout || "Done!", success: true});
+                        }
+                    });
+                }catch(e){
+                    // this.pushLog("Sh execution error! -> "+command, false);
+                    resolve({response: "Error!", success: false});
+                }
+            }),
+        }
     }
 
     onLoad(){this.variables["OS"]=type();}

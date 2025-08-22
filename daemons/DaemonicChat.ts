@@ -30,7 +30,7 @@ export class DaemonicChat extends DaemonicDaemon{
                     this.pushLog(`ChatData: Couldn't decode file. Probably not in JSON.`, false);
                 }
             }else{
-                this.pushLog(`ChatData: Couldn't reading file. Probably doesn't exist.`, false);
+                this.pushLog(`ChatData: Couldn't read file. Probably doesn't exist.`, false);
             }});
         }else{
             this.pushLog(`ChatData: No file location set for the ChatDB file`, false);
