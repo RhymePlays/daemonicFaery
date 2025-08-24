@@ -13,7 +13,8 @@ export class CCTVRecorder extends DaemonicDaemon{
             sourceUrl: "rtsp://admin:admin123456@{IP}/ch=1?subtype=0",
             MACAddress: [string] || [undefined],
             saveDirectory: [string],
-            disableAutoPreview?: [boolean]
+            disableAutoPreview?: [boolean],
+            daysToKeep: [number] // ToDo
         }
     ]
 
