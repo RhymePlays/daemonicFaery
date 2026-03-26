@@ -240,13 +240,17 @@
                     if (returnValue){urlParamsObj[injectedData.webSignals[webSignalName].optionalParams[index]]=returnValue;}
                 }
                 if (mandatoryParamMissing==false){
-                    fetch(`${location.protocol}//${location.host}/${webSignalName}?${new URLSearchParams(urlParamsObj).toString()}`).then((res)=>{
-                        if (res.status==200){
-                            res.text().then((resText)=>{document.getElementById("output").innerText=resText;});
-                        }else{
-                            document.getElementById("output").innerText = "Error sending webSignal "+webSignalName;
-                        }
-                    });
+                    if (injectedData.webSignals[webSignalName].likelyHTML){
+                        window.open(`${location.protocol}//${location.host}/${webSignalName}?${new URLSearchParams(urlParamsObj).toString()}`, '_blank');
+                    }else{
+                        fetch(`${location.protocol}//${location.host}/${webSignalName}?${new URLSearchParams(urlParamsObj).toString()}`).then((res)=>{
+                            if (res.status==200){
+                                res.text().then((resText)=>{document.getElementById("output").innerText=resText;});
+                            }else{
+                                document.getElementById("output").innerText = "Error sending webSignal "+webSignalName;
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -286,6 +290,7 @@
                         ce("div", {className: "title"}, [escapeHTML(item)]),
                         ce("div", {className: "daemonName"}, [escapeHTML(injectedData.webSignals[item].daemon)]),
                         injectedData.webSignals[item].willRespond?ce("div",{className:"willReturnIcon", innerHTML: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M760-200v-160q0-50-35-85t-85-35H273l144 144-57 56-240-240 240-240 57 56-144 144h367q83 0 141.5 58.5T840-360v160h-80Z"/></svg>`}):ce("span",{className:""}),
+                        injectedData.webSignals[item].likelyHTML?ce("div",{className:"willReturnIcon", innerHTML: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="m640-280-57-56 184-184-184-184 57-56 240 240-240 240ZM80-200v-160q0-83 58.5-141.5T280-560h247L383-704l57-56 240 240-240 240-57-56 144-144H280q-50 0-85 35t-35 85v160H80Z"/></svg>`}):ce("span",{className:""}),
                     ]),
                     ce("div", {className: "webSignalDescriptionRow"}, [escapeHTML(injectedData.webSignals[item].description)]),
                     ce("div", {className: "webSignalInputRow"}, inputElems),

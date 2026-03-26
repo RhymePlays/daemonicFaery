@@ -49,6 +49,7 @@ export class DaemonicChat extends DaemonicDaemon{
             webSignal: "daemonicChat",
             respondWithSignal: "daemonicChatCalled",
             willRespond: true,
+            likelyHTML: true,
             description: "DaemonicChat Page"
         });
 

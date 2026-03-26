@@ -21,6 +21,7 @@ export class WebPort extends DaemonicDaemon{
         webSignal: [string] unique value for webSignal parameter.
         returnWithSignal: [string] upon valid webRequest, this is the signal with which this daemon will send a sender() request to the 'daemon' daemon.
         willRespond: [boolean] determines if this daemon should wait for a response after a valid webRequest.
+        likelyHTML: [boolean] signals redirection sign. If true, WebPort will open the request in a new tab.
         description: [string] gives a run-down of what the webSignal does.
         mandatoryParams: [array] [parameter1, parameter2]
         optionalParams: [array] [parameter3, parameter4]
@@ -116,11 +117,12 @@ export class WebPort extends DaemonicDaemon{
                 daemon: from,
                 respondWithSignal: data.respondWithSignal||"",
                 willRespond: data.willRespond||false,
+                likelyHTML: data.likelyHTML||false,
                 description: data.description||"",
                 mandatoryParams: data.mandatoryParams||[],
                 optionalParams: data.optionalParams||[]
             };
-        }else if(signal=="removeListener"){
+        }else if(signal=="removeListener"){ // removeAllListeners for when a daemon stops.
             this.pushLog(`webSignal '${data}' unregistered by '${from}'`);
             delete this.variables.listenJob[data];
         }else if(signal=="getListeners"){
@@ -150,7 +152,8 @@ export class WebCTL extends DaemonicDaemon{
         this.sender("WebPort", "addListener", {
             webSignal: "",
             respondWithSignal: "pageRequested",
-            willRespond: true
+            willRespond: true,
+            likelyHTML: true
         });
     }
     stop(){this.sender("WebPort", "removeListener", "");}

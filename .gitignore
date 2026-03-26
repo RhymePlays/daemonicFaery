@@ -175,4 +175,6 @@ dist
 .DS_Store
 
 # DaemonicIgnores
+.gitignore
 /daemons/stockCheckST.ts
+/daemons/JellyfinFTPMediaScrapper_h5ai.ts
